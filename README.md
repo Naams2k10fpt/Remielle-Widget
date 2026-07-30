@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=28&pause=1000&color=C084FC&center=true&vCenter=true&width=700&lines=Remielle+the+Widget+%F0%9F%8C%B8;Your+AI+Companion%2C+Everywhere" alt="Typing SVG" />
 
@@ -32,7 +32,16 @@
 
 ---
 
-## 5 Trạng thái biểu cảm (dùng chung cho cả hai)
+## ✨ Tính năng nổi bật & Tương tác
+
+- 🎭 **5 Trạng thái biểu cảm sinh động** — Remielle thay đổi GIF thời gian thực theo từng tiến trình hội thoại.
+- 🖱️ **Kéo thả tự do (Drag & Drop)** — Nhấp giữ chuột để di chuyển Remielle tới bất kỳ đâu trên màn hình.
+- 🔍 **Phóng to / Thu nhỏ linh hoạt (Zoom/Resize)** — Lăn con trỏ chuột (`Scroll Wheel`) lên GIF để phóng to hoặc thu nhỏ Remielle theo ý thích. Kích thước được tự động ghi nhớ cho lần truy cập sau!
+- 🌸 **Hiệu ứng Hoa Anh Đào khi Nhấp chuột (Click & Sakura Burst)** — Nhấp chuột vào Remielle để xem hiệu ứng zoom nhẹ sinh động cùng các cánh hoa anh đào (sakura) rơi rơi dịu dàng và mờ dần!
+
+---
+
+## 🎭 5 Trạng thái biểu cảm
 
 | Trạng thái | GIF | Mô tả |
 | :--- | :---: | :--- |

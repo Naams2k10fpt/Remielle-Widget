@@ -1,6 +1,15 @@
 // =============================================================
-// GPTielle — AI Assistant Widget for chatgpt.com
+// ChatGPT — Remielle the Widget · chatgpt.com
 // =============================================================
+
+// --- Widget size (persisted across sessions) ---
+const SIZE_KEY  = 'remielle-size-chatgpt';
+const SIZE_MIN  = 60;
+const SIZE_MAX  = 220;
+const SIZE_STEP = 12;
+let widgetSize  = Math.min(SIZE_MAX, Math.max(SIZE_MIN,
+  parseInt(localStorage.getItem(SIZE_KEY) || '120', 10)
+));
 
 // --- Assets & States ---
 const ASSETS = {
@@ -25,6 +34,7 @@ let widgetImg    = null;
 let aiObserver   = null;
 let typingTimeout = null;
 let isObserving  = false;
+let dragMoved    = false; // distinguish click from drag-end
 
 
 // =============================================================
@@ -39,12 +49,112 @@ function createWidget() {
 
   widgetImg = document.createElement('img');
   widgetImg.src = ASSETS.WAITING;
-  widgetImg.alt = 'GPTielle - AI Status';
+  widgetImg.alt = 'Remielle - AI Status';
   widgetImg.draggable = false;
 
   container.appendChild(widgetImg);
   document.body.appendChild(container);
+
+  // Apply saved size
+  applySize(container);
+
   makeDraggable(container);
+  setupScrollResize(container);
+  setupClickInteraction(container);
+}
+
+function applySize(container) {
+  container.style.width  = `${widgetSize}px`;
+  container.style.height = `${widgetSize}px`;
+}
+
+// ── Scroll-to-resize ─────────────────────────────────────────
+function setupScrollResize(container) {
+  container.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    widgetSize += e.deltaY < 0 ? SIZE_STEP : -SIZE_STEP;
+    widgetSize  = Math.max(SIZE_MIN, Math.min(SIZE_MAX, widgetSize));
+    applySize(container);
+    localStorage.setItem(SIZE_KEY, widgetSize);
+  }, { passive: false });
+}
+
+// ── Click: zoom burst + cherry blossoms ──────────────────────
+function setupClickInteraction(container) {
+  container.addEventListener('click', () => {
+    if (dragMoved) return; // ignore accidental click after drag
+
+    // Gentle zoom-out pop
+    container.style.transition = 'transform 0.12s ease-out';
+    container.style.transform  = 'scale(1.22)';
+    setTimeout(() => {
+      container.style.transition = 'transform 0.18s ease-in';
+      container.style.transform  = 'scale(1)';
+    }, 130);
+
+    // Sakura burst
+    const rect = container.getBoundingClientRect();
+    const cx = rect.left + rect.width  / 2;
+    const cy = rect.top  + rect.height / 2;
+    const count = 14;
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => spawnPetal(cx, cy), i * 25);
+    }
+  });
+}
+
+// ── Cherry blossom particle ───────────────────────────────────
+function spawnPetal(cx, cy) {
+  const el = document.createElement('div');
+
+  // Spawn in a ring around the widget center
+  const angle  = Math.random() * Math.PI * 2;
+  const radius = widgetSize * 0.35 + Math.random() * widgetSize * 0.25;
+  const x0 = cx + Math.cos(angle) * radius;
+  const y0 = cy + Math.sin(angle) * radius;
+
+  // Physics
+  const driftX   = (Math.random() - 0.5) * 90;
+  const driftY   = 55 + Math.random() * 80;
+  const rotate   = (Math.random() - 0.5) * 600;
+  const size     = 7 + Math.random() * 9;   // px
+  const duration = 1100 + Math.random() * 900; // ms
+  const hue      = 335 + Math.random() * 25;   // pink range
+  const sat      = 65 + Math.random() * 20;
+  const lit      = 78 + Math.random() * 14;
+
+  Object.assign(el.style, {
+    position:     'fixed',
+    left:         `${x0}px`,
+    top:          `${y0}px`,
+    width:        `${size}px`,
+    height:       `${size * 0.72}px`,
+    borderRadius: '60% 40% 60% 40% / 50% 50% 50% 50%',
+    background:   `hsl(${hue}deg ${sat}% ${lit}%)`,
+    boxShadow:    `0 0 ${size * 0.4}px hsl(${hue}deg ${sat}% ${lit}% / 0.5)`,
+    opacity:      '0.95',
+    zIndex:       '2147483647',
+    pointerEvents:'none',
+    transform:    'translate(-50%,-50%)',
+    willChange:   'transform, opacity',
+    transition:   `transform ${duration}ms cubic-bezier(0.2,0,0.4,1),
+                   left      ${duration}ms cubic-bezier(0.2,0,0.4,1),
+                   top       ${duration}ms cubic-bezier(0.2,0,0.4,1),
+                   opacity   ${duration * 0.6}ms ease ${duration * 0.4}ms`,
+  });
+
+  document.body.appendChild(el);
+
+  // Trigger movement (double-rAF ensures transition fires)
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    el.style.left    = `${x0 + driftX}px`;
+    el.style.top     = `${y0 + driftY}px`;
+    el.style.opacity = '0';
+    el.style.transform = `translate(-50%,-50%) rotate(${rotate}deg) scale(0.4)`;
+  }));
+
+  setTimeout(() => el.remove(), duration + 50);
 }
 
 function makeDraggable(container) {
@@ -55,6 +165,7 @@ function makeDraggable(container) {
   container.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
     isDragging = true;
+    dragMoved  = false; // reset for click detection
     container.classList.add('dragging');
 
     const rect = container.getBoundingClientRect();
@@ -73,6 +184,7 @@ function makeDraggable(container) {
 
   document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
+    dragMoved = true;
     const newLeft = Math.max(0, Math.min(initLeft + (e.clientX - startX), window.innerWidth  - container.offsetWidth));
     const newTop  = Math.max(0, Math.min(initTop  + (e.clientY - startY), window.innerHeight - container.offsetHeight));
     container.style.left = `${newLeft}px`;
@@ -95,82 +207,49 @@ function setState(newState) {
 
 
 // =============================================================
-// ChatGPT-specific DOM helpers
-//
-// ChatGPT (chatgpt.com) key landmarks — stable attributes preferred:
-//
-//  Input box   : div[id="prompt-textarea"][contenteditable]
-//                OR .ProseMirror[contenteditable="true"] (fallback)
-//
-//  Send button : button[data-testid="send-button"]
-//                OR button[aria-label*="Send" i]
-//
-//  Stop button : button[data-testid="stop-button"]
-//                (present ONLY while AI is generating)
-//
-//  AI messages : [data-message-author-role="assistant"]
-//                 → streaming text lives inside .markdown, .prose, or
-//                   direct text descendants of this container
-//
-// ChatGPT does NOT have a "thinking" block separate from the reply,
-// so we don't need to filter anything out — any mutation inside an
-// assistant message bubble is valid "AI typing" signal.
+// ChatGPT-specific DOM helpers & State Machine
 // =============================================================
 
-// Selector lists — ordered by stability (most stable first)
-const INPUT_SELECTORS = [
-  '#prompt-textarea[contenteditable]',
-  '.ProseMirror[contenteditable="true"]',
-  'div[contenteditable="true"][data-placeholder]',
-  'div[contenteditable="true"]',
-];
+function isChatGPTGenerating() {
+  return !!(
+    document.querySelector('button[data-testid="stop-button"]') ||
+    document.querySelector('button[aria-label*="Stop" i]') ||
+    document.querySelector('[data-is-streaming="true"]')
+  );
+}
 
-const SEND_SELECTORS = [
-  'button[data-testid="send-button"]',
-  'button[aria-label*="send" i]',
-  'form button[type="submit"]',
-];
+// Returns 'thinking', 'response', or false
+function inspectChatGPTState(el) {
+  if (!el) return false;
 
-const STOP_SELECTOR = 'button[data-testid="stop-button"]';
+  // 1. Thinking / reasoning block (o1 / o3 reasoning models)
+  const inReasoning = el.closest(
+    '[data-testid="reasoning-block"], .reasoning-block, [data-is-thinking="true"], details'
+  );
+  if (inReasoning) return 'thinking';
 
-function getElement(selectors) {
-  for (const sel of selectors) {
-    const el = document.querySelector(sel);
-    if (el) return el;
+  // 2. Assistant turn / response markdown container
+  const inAssistant = el.closest(
+    '[data-message-author-role="assistant"], .markdown, .prose, [data-is-streaming="true"], article'
+  );
+  if (inAssistant) return 'response';
+
+  return false;
+}
+
+function getMutationTargetElement(mutation) {
+  if (mutation.type === 'characterData') {
+    return mutation.target.parentElement || mutation.target;
+  }
+  if (mutation.type === 'childList') {
+    return mutation.target;
   }
   return null;
 }
 
-function getInputEl()  { return getElement(INPUT_SELECTORS); }
-function getSendBtn()  { return getElement(SEND_SELECTORS); }
-function isStopVisible() { return !!document.querySelector(STOP_SELECTOR); }
-
-// Returns true when the mutated element is inside an assistant message
-function isAssistantResponseMutation(mutation) {
-  let el = null;
-
-  if (mutation.type === 'characterData') {
-    el = mutation.target.parentElement;
-  } else if (mutation.type === 'childList') {
-    for (const node of mutation.addedNodes) {
-      el = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
-      if (el) break;
-    }
-  }
-
-  if (!el) return false;
-
-  // Must be inside an assistant turn
-  const inAssistant = el.closest('[data-message-author-role="assistant"]');
-  if (!inAssistant) return false;
-
-  // Must carry actual text content
-  return (el.textContent || '').trim().length > 0;
-}
-
 
 // =============================================================
-// AI typing detection
+// AI typing detection (MutationObserver + Polling Safety Net)
 // =============================================================
 
 function startAIObserver() {
@@ -182,44 +261,59 @@ function startAIObserver() {
                document.body;
 
   aiObserver = new MutationObserver((mutations) => {
-    let hasOutput = false;
+    let hasReasoning = false;
+    let hasResponseText = false;
 
     for (const m of mutations) {
-      if (isAssistantResponseMutation(m)) {
-        hasOutput = true;
-        break;
+      const el = getMutationTargetElement(m);
+      if (!el) continue;
+
+      const stateType = inspectChatGPTState(el);
+      if (stateType === 'thinking') {
+        hasReasoning = true;
+      } else if (stateType === 'response') {
+        const txt = (el.textContent || '').trim();
+        if (txt.length > 0) {
+          hasResponseText = true;
+        }
       }
     }
 
-    if (!hasOutput) return;
-
-    // First real text → THINKING → TYPING
-    if (currentState === STATES.AI_THINKING) {
-      setState(STATES.AI_TYPING);
+    // --- State Transitions ---
+    if (hasResponseText) {
+      if (currentState !== STATES.AI_TYPING) {
+        setState(STATES.AI_TYPING);
+      }
+    } else if (hasReasoning && currentState !== STATES.AI_TYPING) {
+      if (currentState !== STATES.AI_THINKING) {
+        setState(STATES.AI_THINKING);
+      }
     }
 
-    // Debounce: quiet for 1.2 s AND stop button gone → AI done
-    if (currentState === STATES.AI_TYPING) {
+    // Debounce completion check
+    if (currentState === STATES.AI_TYPING || currentState === STATES.AI_THINKING) {
       clearTimeout(typingTimeout);
       typingTimeout = setTimeout(() => {
-        if (!isStopVisible()) {
+        if (!isChatGPTGenerating()) {
           setState(STATES.AI_COMPLETE);
           stopAIObserver();
           scheduleReset();
         }
-        // If stop button still visible, keep waiting
       }, 1200);
     }
   });
 
   aiObserver.observe(root, { childList: true, characterData: true, subtree: true });
 
-  // Safety fallback: 2 minutes max, then give up
+  // Safety fallback timeout: 2 minutes max
   clearTimeout(typingTimeout);
   typingTimeout = setTimeout(() => {
     if (currentState === STATES.AI_THINKING || currentState === STATES.AI_TYPING) {
-      setState(STATES.WAITING);
-      stopAIObserver();
+      if (!isChatGPTGenerating()) {
+        setState(STATES.AI_COMPLETE);
+        stopAIObserver();
+        scheduleReset();
+      }
     }
   }, 120_000);
 }
@@ -241,39 +335,38 @@ function scheduleReset() {
 
 
 // =============================================================
-// Submit detection — two paths: Enter key + send button click
+// User interaction detection & Polling Safety Net
 // =============================================================
 
-function onSubmit() {
-  const input = getInputEl();
-  const text  = (input?.textContent || input?.value || '').trim();
-  // Require user was typing OR input has content (handles programmatic sends)
-  if (currentState !== STATES.USER_TYPING && text.length === 0) return;
-
-  setState(STATES.AI_THINKING);
-  startAIObserver();
+function getInputEl() {
+  return document.querySelector(
+    '#prompt-textarea[contenteditable], ' +
+    '.ProseMirror[contenteditable="true"], ' +
+    'div[contenteditable="true"], ' +
+    'textarea'
+  );
 }
-
-
-// =============================================================
-// User interaction detection
-// =============================================================
 
 function handleInputEvent(target) {
   if (!target) return;
-  if (!target.isContentEditable && target.tagName !== 'TEXTAREA') return;
+  if (!target.isContentEditable && target.tagName !== 'TEXTAREA' && target.tagName !== 'INPUT') return;
 
-  const text    = (target.textContent || target.value || '').trim();
+  const text = (target.textContent || target.value || '').trim();
   const aiActive = currentState === STATES.AI_THINKING || currentState === STATES.AI_TYPING;
   if (aiActive) return;
 
   setState(text.length > 0 ? STATES.USER_TYPING : STATES.WAITING);
 }
 
+function onSubmit() {
+  setState(STATES.AI_THINKING);
+  startAIObserver();
+}
+
 function setupUserDetection() {
   // Text input / deletion
-  document.addEventListener('input',  (e) => handleInputEvent(e.target), true);
-  document.addEventListener('keyup',  (e) => {
+  document.addEventListener('input', (e) => handleInputEvent(e.target), true);
+  document.addEventListener('keyup', (e) => {
     if (e.key === 'Backspace' || e.key === 'Delete') handleInputEvent(e.target);
   }, true);
 
@@ -292,40 +385,36 @@ function setupUserDetection() {
     while (el && el !== document.body) {
       const isSend =
         el.matches?.('button[data-testid="send-button"]') ||
-        (el.tagName === 'BUTTON' && (el.getAttribute('aria-label') || '').toLowerCase().includes('send'));
+        (el.tagName === 'BUTTON' && (el.getAttribute('aria-label') || '').toLowerCase().includes('send')) ||
+        el.type === 'submit';
 
       if (isSend) {
-        if (currentState === STATES.USER_TYPING) {
-          // Small delay — let React clear the input first
-          setTimeout(() => {
-            const input = getInputEl();
-            const empty = !(input?.textContent || input?.value || '').trim();
-            if (empty) onSubmit();
-          }, 150);
-        }
+        onSubmit();
         break;
       }
       el = el.parentElement;
     }
   }, true);
 
-  // Stop button disappearing = another signal that AI finished
-  // (covers edge cases where MutationObserver timeout fires too late)
-  const stopPoller = setInterval(() => {
-    if ((currentState === STATES.AI_THINKING || currentState === STATES.AI_TYPING) && !isStopVisible()) {
-      // Extra check: make sure it's truly gone (not just not rendered yet)
+  // Polling Safety Net: Check generation state every 500ms
+  setInterval(() => {
+    const generating = isChatGPTGenerating();
+
+    if (generating) {
+      if (currentState === STATES.WAITING || currentState === STATES.USER_TYPING) {
+        onSubmit();
+      }
+    } else if (currentState === STATES.AI_TYPING || currentState === STATES.AI_THINKING) {
+      // Stop button disappeared -> trigger AI_COMPLETE
       setTimeout(() => {
-        if (!isStopVisible() && (currentState === STATES.AI_THINKING || currentState === STATES.AI_TYPING)) {
+        if (!isChatGPTGenerating() && (currentState === STATES.AI_TYPING || currentState === STATES.AI_THINKING)) {
           setState(STATES.AI_COMPLETE);
           stopAIObserver();
           scheduleReset();
         }
       }, 400);
     }
-  }, 800);
-
-  // Clean up poller if extension context invalidates (page unload)
-  window.addEventListener('beforeunload', () => clearInterval(stopPoller));
+  }, 500);
 }
 
 

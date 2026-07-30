@@ -1,4 +1,4 @@
-﻿<div align="center">
+<div align="center">
 
 [← Về Remielle the Widget](../README.md)
 
@@ -17,15 +17,17 @@
 
 ---
 
-## ✨ Tính năng nổi bật
+## ✨ Tính năng nổi bật & Tương tác
 
-- 🎭 **5 trạng thái biểu cảm** — Theo dõi chính xác từng bước trong cuộc hội thoại với Claude
-- 🖱️ **Kéo thả tự do (Drag & Drop)** — Di chuyển nhân vật đến bất kỳ góc nào trên màn hình
+- 🎭 **5 Trạng thái biểu cảm** — Theo dõi chính xác từng bước trong cuộc hội thoại với Claude.
+- 🖱️ **Kéo thả tự do (Drag & Drop)** — Nhấp giữ và di chuyển nhân vật đến bất kỳ vị trí nào.
+- 🔍 **Phóng to / Thu nhỏ (Scroll Wheel)** — Cuộn con trỏ chuột lên Remielle để tùy chỉnh kích thước lớn/nhỏ (tự động lưu thiết lập).
+- 🌸 **Hiệu ứng Sakura khi Click** — Nhấp chuột vào Remielle để xem phản ứng zoom nhẹ và bùng nổ cánh hoa anh đào rơi tự nhiên!
 - ⚡ **Nhận diện thông minh:**
-  - Phát hiện khi bạn đang gõ prompt
-  - Phân biệt trạng thái Claude đang "suy nghĩ" với lúc thực sự đang viết câu trả lời
-  - Tự reset về WAITING sau khi AI hoàn thành
-  - Xử lý điều hướng SPA (chuyển cuộc trò chuyện không cần tải lại trang)
+  - Phát hiện khi bạn đang gõ prompt.
+  - Phân biệt trạng thái Claude đang "suy nghĩ" với lúc thực sự đang viết câu trả lời.
+  - Tự reset về WAITING sau khi AI hoàn thành.
+  - Xử lý điều hướng SPA (chuyển cuộc trò chuyện không cần tải lại trang).
 - 🔒 **Bảo mật tuyệt đối** — Không thu thập, không gửi bất kỳ dữ liệu nào. Hoàn toàn client-side.
 
 ---
