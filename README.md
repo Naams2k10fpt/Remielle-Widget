@@ -161,8 +161,8 @@ từ 60–220 pixel bằng con lăn. Vị trí, kích thước, auto-open và t�
 
 Lần chạy thủ công đầu tiên đăng ký widget khởi động cùng Windows. Ở các lần
 đăng nhập sau, widget chạy ẩn và tự hiện khi cửa sổ ChatGPT hoặc Codex được
-phát hiện. Widget ẩn theo khi cửa sổ AI được thu nhỏ hoặc đóng, rồi hiện lại
-khi cửa sổ được khôi phục.
+phát hiện. Widget ẩn theo khi cửa sổ AI được thu nhỏ, đóng hoặc mất foreground
+khi người dùng chuyển sang ứng dụng khác, rồi hiện lại khi quay về ứng dụng AI.
 
 Nhấp chuột phải vào widget để:
 

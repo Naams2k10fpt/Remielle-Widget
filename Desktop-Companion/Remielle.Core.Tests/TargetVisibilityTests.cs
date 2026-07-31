@@ -8,12 +8,16 @@ namespace Remielle.Core.Tests;
 public sealed class TargetVisibilityTests
 {
     [TestMethod]
-    [DataRow(false, WindowVisualState.Normal, true)]
-    [DataRow(false, WindowVisualState.Minimized, false)]
-    [DataRow(true, WindowVisualState.Normal, false)]
+    [DataRow(false, WindowVisualState.Normal, true, true)]
+    [DataRow(false, WindowVisualState.Minimized, true, false)]
+    [DataRow(true, WindowVisualState.Normal, true, false)]
+    [DataRow(false, WindowVisualState.Normal, false, false)]
     public void WidgetFollowsTargetWindow(
         bool isOffscreen,
         WindowVisualState visualState,
+        bool isForeground,
         bool expected) =>
-        Assert.AreEqual(expected, ChatGptObserver.ShouldShowTarget(isOffscreen, visualState));
+        Assert.AreEqual(
+            expected,
+            ChatGptObserver.ShouldShowTarget(isOffscreen, visualState, isForeground));
 }

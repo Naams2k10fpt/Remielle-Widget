@@ -8,11 +8,13 @@ namespace Remielle.ChatGPTObserver;
 
 public sealed class ChatGptObserver : IWidgetObserver
 {
+    private static readonly TimeSpan ForegroundPollInterval = TimeSpan.FromMilliseconds(25);
     private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(500);
-    private static readonly TimeSpan ReconnectInterval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan ReconnectInterval = TimeSpan.FromMilliseconds(250);
     private static readonly TimeSpan OutputIdleDuration = TimeSpan.FromMilliseconds(1200);
 
     private readonly object _runSync = new();
+    private readonly object _availabilitySync = new();
     private readonly UiSelectors _selectors;
     private readonly Action<string> _log;
     private readonly AutomationFocusChangedEventHandler _focusHandler;
@@ -26,8 +28,11 @@ public sealed class ChatGptObserver : IWidgetObserver
     private AutomationElement? _window;
     private AutomationElement? _composer;
     private AutomationElement? _assistant;
+    private nint _targetWindowHandle;
+    private int _targetProcessId;
     private bool _connected;
     private bool? _targetAvailable;
+    private volatile bool _targetForeground;
     private bool _busy;
     private bool _outputSeen;
     private bool _pauseEmitted;
@@ -65,7 +70,9 @@ public sealed class ChatGptObserver : IWidgetObserver
             }
 
             _runCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            _runTask = Task.Run(() => ObserveLoopAsync(_runCancellation.Token));
+            _runTask = Task.WhenAll(
+                Task.Run(() => ObserveLoopAsync(_runCancellation.Token)),
+                Task.Run(() => ObserveForegroundLoopAsync(_runCancellation.Token)));
             return _runTask;
         }
     }
@@ -100,6 +107,30 @@ public sealed class ChatGptObserver : IWidgetObserver
         _runCancellation?.Dispose();
     }
 
+    private async Task ObserveForegroundLoopAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            var targetWindowHandle = Volatile.Read(ref _targetWindowHandle);
+            var targetProcessId = Volatile.Read(ref _targetProcessId);
+            if (targetWindowHandle != 0 && targetProcessId != 0)
+            {
+                var foregroundProcessId = GetForegroundProcessId();
+                if (foregroundProcessId != Environment.ProcessId)
+                {
+                    _targetForeground = foregroundProcessId == targetProcessId;
+                }
+
+                SetTargetAvailability(
+                    _targetForeground
+                    && IsWindowVisible(targetWindowHandle)
+                    && !IsIconic(targetWindowHandle));
+            }
+
+            await Task.Delay(ForegroundPollInterval, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
     private async Task ObserveLoopAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
@@ -111,7 +142,7 @@ public sealed class ChatGptObserver : IWidgetObserver
                     Connect();
                     if (_window is null)
                     {
-                        if (_targetAvailable.HasValue || _pendingDisconnect)
+                        if (HasTargetAvailability() || _pendingDisconnect)
                         {
                             SetTargetAvailability(false);
                             if (_pendingDisconnect)
@@ -191,9 +222,10 @@ public sealed class ChatGptObserver : IWidgetObserver
         }
 
         _connected = true;
+        Volatile.Write(ref _targetProcessId, _window.Current.ProcessId);
+        Volatile.Write(ref _targetWindowHandle, _window.Current.NativeWindowHandle);
         Automation.AddAutomationFocusChangedEventHandler(_focusHandler);
         _log("chatgpt_window_detected");
-        SetTargetAvailability(IsTargetVisible(_window));
     }
 
     private HashSet<int> GetTargetProcessIds()
@@ -220,9 +252,7 @@ public sealed class ChatGptObserver : IWidgetObserver
         }
 
         _ = _window.Current.ProcessId;
-        var targetVisible = IsTargetVisible(_window);
-        SetTargetAvailability(targetVisible);
-        if (!targetVisible)
+        if (!IsTargetAvailable())
         {
             return;
         }
@@ -373,14 +403,17 @@ public sealed class ChatGptObserver : IWidgetObserver
     {
         try
         {
-            if (sender is AutomationElement element
-                && _window is not null
-                && element.Current.ProcessId == _window.Current.ProcessId
+            if (sender is not AutomationElement element || _window is null)
+            {
+                return;
+            }
+
+            if (element.Current.ProcessId == _window.Current.ProcessId
                 && MatchesAny(element, _selectors.Composer, out _))
             {
                 ObserveComposer(element);
             }
-            else if (_composer is not null)
+            else if (_targetForeground && _composer is not null)
             {
                 ObserveComposer(_composer);
             }
@@ -496,6 +529,9 @@ public sealed class ChatGptObserver : IWidgetObserver
             _log($"uia_disconnect_error:{exception.GetType().Name}");
         }
 
+        Volatile.Write(ref _targetWindowHandle, 0);
+        Volatile.Write(ref _targetProcessId, 0);
+        _targetForeground = false;
         _window = null;
         _composer = null;
         _assistant = null;
@@ -550,30 +586,68 @@ public sealed class ChatGptObserver : IWidgetObserver
     private void Emit(WidgetEventKind kind) =>
         EventObserved?.Invoke(new WidgetEvent(kind));
 
+    private bool IsTargetAvailable()
+    {
+        lock (_availabilitySync)
+        {
+            return _targetAvailable == true;
+        }
+    }
+
+    private bool HasTargetAvailability()
+    {
+        lock (_availabilitySync)
+        {
+            return _targetAvailable.HasValue;
+        }
+    }
+
     private void SetTargetAvailability(bool available)
     {
-        if (_targetAvailable == available)
+        lock (_availabilitySync)
         {
-            return;
+            if (_targetAvailable == available)
+            {
+                return;
+            }
+
+            _targetAvailable = available;
         }
 
-        _targetAvailable = available;
         TargetAvailabilityChanged?.Invoke(available);
     }
 
-    private static bool IsTargetVisible(AutomationElement window)
+    private static int GetForegroundProcessId()
     {
-        var visualState = WindowVisualState.Normal;
-        if (window.TryGetCurrentPattern(WindowPattern.Pattern, out var pattern))
+        var foregroundWindow = GetForegroundWindow();
+        if (foregroundWindow == 0)
         {
-            visualState = ((WindowPattern)pattern).Current.WindowVisualState;
+            return 0;
         }
 
-        return ShouldShowTarget(window.Current.IsOffscreen, visualState);
+        _ = GetWindowThreadProcessId(foregroundWindow, out var processId);
+        return unchecked((int)processId);
     }
 
-    internal static bool ShouldShowTarget(bool isOffscreen, WindowVisualState visualState) =>
-        !isOffscreen && visualState != WindowVisualState.Minimized;
+    [DllImport("user32.dll")]
+    private static extern nint GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(nint windowHandle, out uint processId);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsWindowVisible(nint windowHandle);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool IsIconic(nint windowHandle);
+
+    internal static bool ShouldShowTarget(
+        bool isOffscreen,
+        WindowVisualState visualState,
+        bool isForeground) =>
+        isForeground && !isOffscreen && visualState != WindowVisualState.Minimized;
 
     private static AutomationElement? FindElement(
         AutomationElementCollection elements,
