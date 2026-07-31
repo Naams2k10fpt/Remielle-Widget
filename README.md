@@ -4,17 +4,21 @@
 
 # 🌸 Remielle the Widget
 
-### Chrome Extension Collection — Remielle, trợ lý AI của bạn trên Claude & ChatGPT
+### Browser Extensions & Windows Desktop App — Remielle trên Claude, ChatGPT và Codex
 
-**Remielle the Widget** mang nhân vật **Remielle** — trợ lý AI sinh động — đến góc màn hình khi bạn trò chuyện với Claude hay ChatGPT. Remielle tự động thay đổi biểu cảm theo từng trạng thái thực — từ lúc bạn gõ phím cho đến khi AI hoàn thành câu trả lời.
+**Remielle the Widget** mang nhân vật **Remielle** — trợ lý AI sinh động — đến
+trình duyệt hoặc màn hình Windows khi bạn trò chuyện với Claude, ChatGPT hay
+Codex. Remielle tự động thay đổi biểu cảm theo từng trạng thái thực — từ lúc
+bạn gõ phím cho đến khi AI hoàn thành câu trả lời.
 
 > 💡 **Inspired by & Credits to** [Gemielle](https://github.com/Rainan1010/Gemielle) by **[Rainan1010](https://github.com/Rainan1010)**
-> — bản gốc ghép **Remielle** + **Gemini** = Gemielle. Dự án này đưa Remielle đến với Claude và ChatGPT.
+> — bản gốc ghép **Remielle** + **Gemini** = Gemielle. Dự án này đưa Remielle đến với Claude, ChatGPT và Codex.
 
 <br/>
 
 [![Claude](https://img.shields.io/badge/✅_Claude-Claude.ai-CC785C?style=for-the-badge&logo=anthropic&logoColor=white)](#-Claude--cho-claudeai)
 [![ChatGPT](https://img.shields.io/badge/✅_ChatGPT-ChatGPT.com-74AA9C?style=for-the-badge&logo=openai&logoColor=white)](#-ChatGPT--cho-chatgptcom)
+[![Windows](https://img.shields.io/badge/✅_ChatGPT%2FCodex-Windows_App-0078D4?style=for-the-badge&logo=windows&logoColor=white)](./ChatGPT-Codex/README.md)
 [![Chrome](https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://developer.chrome.com/docs/extensions/)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-22C55E?style=for-the-badge)](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3)
 [![License: MIT](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](LICENSE)
@@ -23,12 +27,13 @@
 
 ---
 
-## 📦 Các extension trong bộ
+## 📦 Các phiên bản trong bộ
 
-| Extension | Nền tảng | Thư mục | Hướng dẫn |
+| Phiên bản | Nền tảng | Thư mục | Hướng dẫn |
 |---|---|---|---|
 | 🌸 **Claude** | [claude.ai](https://claude.ai) | [`/Claude`](./Claude/) | [Xem README →](./Claude/README.md) |
 | 🌿 **ChatGPT** | [chatgpt.com](https://chatgpt.com) | [`/ChatGPT`](./ChatGPT/) | [Xem README →](./ChatGPT/README.md) |
+| 🪟 **ChatGPT/Codex** | Windows Desktop App | [`/ChatGPT-Codex`](./ChatGPT-Codex/) | [Xem README →](./ChatGPT-Codex/README.md) |
 
 ---
 
@@ -136,72 +141,22 @@ Nhấn **"Load unpacked"** → chọn **một trong hai thư mục** bên dướ
 
 ---
 
-## 🪟 Windows Desktop Companion
+## 🪟 ChatGPT/Codex — Windows Desktop App
 
-`Desktop-Companion` là overlay WPF chạy cùng ứng dụng ChatGPT/Codex trên
-Windows. Overlay giữ nguyên 5 trạng thái `WAITING`, `USER_TYPING`,
-`AI_THINKING`, `AI_TYPING` và `AI_COMPLETE`, đồng thời dùng Windows UI
-Automation để suy luận hoạt động của ứng dụng desktop.
+<details>
+<summary><b>Xem chi tiết về ChatGPT/Codex</b></summary>
 
-### Yêu cầu và cách chạy
+**ChatGPT/Codex** là overlay WPF dành cho ứng dụng desktop trên Windows:
 
-- Windows 10 hoặc Windows 11.
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) trở lên.
+- Giữ nguyên 5 trạng thái và bộ GIF của hai extension.
+- Tự hiện khi ChatGPT/Codex foreground; tự ẩn khi thu nhỏ, đóng hoặc chuyển app.
+- Theo dõi foreground bằng Win32 25 ms, độc lập với lần quét UI Automation.
+- Kéo thả, đổi kích thước, lưu vị trí, auto-open và diagnostic logging.
+- Hoạt động cục bộ, không lưu hoặc gửi nội dung hội thoại.
 
-```powershell
-dotnet restore Desktop-Companion/Remielle.Desktop.sln
-dotnet build Desktop-Companion/Remielle.Desktop.sln
-dotnet test Desktop-Companion/Remielle.Desktop.sln
-dotnet run --project Desktop-Companion/Remielle.Overlay
-```
+**→ [Xem README ChatGPT/Codex](./ChatGPT-Codex/README.md)**
 
-Widget luôn nằm trên cùng, có thể kéo bằng chuột trái và thay đổi kích thước
-từ 60–220 pixel bằng con lăn. Vị trí, kích thước, auto-open và tùy chọn logging
-được lưu tại `%LocalAppData%\Remielle Widget\settings.json`.
-
-Lần chạy thủ công đầu tiên đăng ký widget khởi động cùng Windows. Ở các lần
-đăng nhập sau, widget chạy ẩn và tự hiện khi cửa sổ ChatGPT hoặc Codex được
-phát hiện. Widget ẩn theo khi cửa sổ AI được thu nhỏ, đóng hoặc mất foreground
-khi người dùng chuyển sang ứng dụng khác, rồi hiện lại khi quay về ứng dụng AI.
-
-Nhấp chuột phải vào widget để:
-
-- Bật/tắt **Auto-open with ChatGPT/Codex**. Tùy chọn này dùng mục `Run` của
-  người dùng hiện tại, không cần quyền quản trị.
-- Bật/tắt diagnostic logging. Logging mặc định tắt; khi bật, log nằm tại
-  `%LocalAppData%\Remielle Widget\remielle.log`.
-- Đưa widget về vị trí mặc định.
-- Đóng ứng dụng.
-- Trong build Debug, chọn trực tiếp từng state trong **Debug state simulator**
-  hoặc chọn **Resume observer** để quay lại UI Automation. Menu này không tồn
-  tại trong build Release.
-
-### Windows UI Automation và quyền riêng tư
-
-Observer tìm process/cửa sổ ChatGPT hoặc Codex, sau đó dùng selector trong
-[`UiSelectors.json`](./Desktop-Companion/Remielle.ChatGPTObserver/UiSelectors.json)
-để nhận diện composer, Send, Stop và vùng assistant. Khi giao diện desktop thay
-đổi, dùng Inspect.exe hoặc Accessibility Insights để lấy metadata accessibility,
-cập nhật matcher `automationId`, `nameContains`, `controlType`, `className` hoặc
-`classNameContains`, sau đó build và khởi động lại.
-
-Ứng dụng chỉ kiểm tra focus, empty/non-empty và các thay đổi cấu trúc UI. Nội
-dung prompt hoặc phản hồi không được lưu, ghi log hay gửi đi; ứng dụng không có
-telemetry, không đọc cookie/token/clipboard, không hook bàn phím, không inject
-DLL và không đọc bộ nhớ process.
-
-> ⚠️ **Giới hạn đã biết:** trên Codex desktop `26.721.4979.0` được kiểm tra ngày
-> 31/07/2026, lần đọc UIA ban đầu chỉ thấy `Chrome_WidgetWin_1`, `RootWebArea`
-> và các nút khung cửa sổ. Runtime observer sau đó đã nhận diện được Send/Stop
-> và chuyển sang `AI_THINKING`, nhưng selector composer/assistant cùng đủ 5
-> trạng thái live vẫn chưa được xác minh. Observer sẽ reconnect và ghi
-> diagnostic an toàn; Debug state simulator vẫn kiểm tra đầy đủ overlay và 5
-> animation.
-
-Desktop Companion tái sử dụng nguyên trạng GIF từ các extension hiện có.
-Nguồn asset là [Gemielle](https://github.com/Rainan1010/Gemielle); thông tin
-giấy phép nằm trong
-[`THIRD-PARTY-NOTICES.md`](./Desktop-Companion/THIRD-PARTY-NOTICES.md).
+</details>
 
 ---
 
@@ -268,17 +223,28 @@ Remielle-Widget/
 │       ├── ai_typing.gif
 │       └── ai_complete_answer.gif
 │
-└── 📁 ChatGPT/              ← Extension cho ChatGPT
-    ├── 📄 manifest.json
-    ├── 📄 content.js
-    ├── 📄 style.css
+├── 📁 ChatGPT/              ← Extension cho ChatGPT
+│   ├── 📄 manifest.json
+│   ├── 📄 content.js
+│   ├── 📄 style.css
+│   ├── 📄 README.md
+│   └── 📁 assets/
+│       ├── waiting_user_input.gif
+│       ├── user_typing.gif
+│       ├── ai_thingking.gif
+│       ├── ai_typing.gif
+│       └── ai_complete_answer.gif
+│
+└── 📁 ChatGPT-Codex/        ← Ứng dụng WPF cho ChatGPT/Codex trên Windows
     ├── 📄 README.md
-    └── 📁 assets/
-        ├── waiting_user_input.gif
-        ├── user_typing.gif
-        ├── ai_thingking.gif
-        ├── ai_typing.gif
-        └── ai_complete_answer.gif
+    ├── 📄 Remielle.Desktop.sln
+    ├── 📁 Remielle.Core/
+    ├── 📁 Remielle.ChatGPTObserver/
+    ├── 📁 Remielle.Overlay/
+    ├── 📁 Remielle.Core.Tests/
+    ├── 📁 Assets/
+    ├── 📁 LICENSES/
+    └── 📄 THIRD-PARTY-NOTICES.md
 ```
 
 ---
@@ -301,6 +267,7 @@ Kế thừa từ Gemielle:
 
 - **Remielle the Widget** là dự án mã nguồn mở cá nhân, **không liên kết với Anthropic (Claude) hay OpenAI (ChatGPT)**.
 - Các extension hoạt động hoàn toàn phía client, **không thu thập hay lưu trữ bất kỳ dữ liệu cá nhân nào**.
+- ChatGPT/Codex hoạt động cục bộ, **không thu thập hay lưu trữ dữ liệu cá nhân**.
 - Vì các nền tảng AI có thể cập nhật giao diện bất kỳ lúc nào, một số tính năng có thể cần cập nhật theo.
 
 ---
