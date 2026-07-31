@@ -50,6 +50,7 @@ public sealed class ChatGptObserver : IWidgetObserver
     }
 
     public event Action<WidgetEvent>? EventObserved;
+    public event Action<bool>? TargetAvailabilityChanged;
 
     public Task RunAsync(CancellationToken cancellationToken)
     {
@@ -173,6 +174,7 @@ public sealed class ChatGptObserver : IWidgetObserver
         _connected = true;
         Automation.AddAutomationFocusChangedEventHandler(_focusHandler);
         _log("chatgpt_window_detected");
+        TargetAvailabilityChanged?.Invoke(true);
         Poll();
     }
 
@@ -458,6 +460,7 @@ public sealed class ChatGptObserver : IWidgetObserver
             return;
         }
 
+        var wasConnected = _connected;
         try
         {
             Automation.RemoveAutomationFocusChangedEventHandler(_focusHandler);
@@ -481,6 +484,11 @@ public sealed class ChatGptObserver : IWidgetObserver
         _contentUnavailableLogged = false;
         _sendLogged = false;
         _stopLogged = false;
+
+        if (wasConnected)
+        {
+            TargetAvailabilityChanged?.Invoke(false);
+        }
 
         if (emitEvent)
         {

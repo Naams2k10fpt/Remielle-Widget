@@ -1,6 +1,7 @@
 {
   "processNames": [
-    "ChatGPT"
+    "ChatGPT",
+    "Codex"
   ],
   "windowTitleContains": [
     "ChatGPT",

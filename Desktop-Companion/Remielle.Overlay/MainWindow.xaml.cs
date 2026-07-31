@@ -134,6 +134,27 @@ public partial class MainWindow : Window
     {
         var menu = new ContextMenu();
 
+        var startup = new MenuItem
+        {
+            Header = "Auto-open with ChatGPT/Codex",
+            IsCheckable = true,
+            IsChecked = _settings.StartWithWindows
+        };
+        startup.Click += (_, _) =>
+        {
+            if (!StartupRegistration.SetEnabled(startup.IsChecked))
+            {
+                startup.IsChecked = !startup.IsChecked;
+                _log.Write("startup_registration_error");
+                return;
+            }
+
+            _settings.StartWithWindows = startup.IsChecked;
+            SaveSettings();
+        };
+        menu.Items.Add(startup);
+        menu.Items.Add(new Separator());
+
         var logging = new MenuItem
         {
             Header = "Diagnostic logging",

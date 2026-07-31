@@ -56,7 +56,7 @@ public sealed class UiSelectors
     private static UiSelectors Defaults() =>
         new()
         {
-            ProcessNames = ["ChatGPT"],
+            ProcessNames = ["ChatGPT", "Codex"],
             WindowTitleContains = ["ChatGPT", "Codex"],
             Window =
             [

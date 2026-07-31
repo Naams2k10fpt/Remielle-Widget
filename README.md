@@ -156,11 +156,17 @@ dotnet run --project Desktop-Companion/Remielle.Overlay
 ```
 
 Widget luôn nằm trên cùng, có thể kéo bằng chuột trái và thay đổi kích thước
-từ 60–220 pixel bằng con lăn. Vị trí, kích thước và tùy chọn logging được lưu
-tại `%LocalAppData%\Remielle Widget\settings.json`.
+từ 60–220 pixel bằng con lăn. Vị trí, kích thước, auto-open và tùy chọn logging
+được lưu tại `%LocalAppData%\Remielle Widget\settings.json`.
+
+Lần chạy thủ công đầu tiên đăng ký widget khởi động cùng Windows. Ở các lần
+đăng nhập sau, widget chạy ẩn và tự hiện khi cửa sổ ChatGPT hoặc Codex được
+phát hiện; khi đóng ứng dụng AI, widget trở lại chạy ẩn để chờ lần mở tiếp theo.
 
 Nhấp chuột phải vào widget để:
 
+- Bật/tắt **Auto-open with ChatGPT/Codex**. Tùy chọn này dùng mục `Run` của
+  người dùng hiện tại, không cần quyền quản trị.
 - Bật/tắt diagnostic logging. Logging mặc định tắt; khi bật, log nằm tại
   `%LocalAppData%\Remielle Widget\remielle.log`.
 - Đưa widget về vị trí mặc định.
