@@ -1,0 +1,64 @@
+{
+  "processNames": [
+    "ChatGPT"
+  ],
+  "windowTitleContains": [
+    "ChatGPT",
+    "Codex"
+  ],
+  "window": [
+    {
+      "controlType": "Window",
+      "className": "Chrome_WidgetWin_1"
+    },
+    {
+      "controlType": "Window"
+    }
+  ],
+  "composer": [
+    {
+      "automationId": "prompt-textarea"
+    },
+    {
+      "nameContains": "Message",
+      "controlType": "Edit"
+    },
+    {
+      "nameContains": "Ask",
+      "controlType": "Edit"
+    },
+    {
+      "nameContains": "Message",
+      "controlType": "Document"
+    },
+    {
+      "nameContains": "Ask",
+      "controlType": "Document"
+    }
+  ],
+  "send": [
+    {
+      "nameContains": "Send",
+      "controlType": "Button"
+    }
+  ],
+  "stop": [
+    {
+      "nameContains": "Stop",
+      "controlType": "Button"
+    }
+  ],
+  "assistant": [
+    {
+      "automationId": "conversation-turn"
+    },
+    {
+      "nameContains": "Assistant",
+      "controlType": "Document"
+    },
+    {
+      "nameContains": "Assistant",
+      "controlType": "Group"
+    }
+  ]
+}

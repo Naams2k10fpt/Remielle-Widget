@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Remielle.Core\Remielle.Core.csproj" />
+    <ProjectReference Include="..\Remielle.ChatGPTObserver\Remielle.ChatGPTObserver.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\Assets\*.gif">
+      <Link>Assets\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="..\Remielle.ChatGPTObserver\UiSelectors.json">
+      <Link>UiSelectors.json</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\THIRD-PARTY-NOTICES.md">
+      <Link>THIRD-PARTY-NOTICES.md</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\LICENSES\Apache-2.0.txt">
+      <Link>LICENSES\Apache-2.0.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\..\LICENSE">
+      <Link>LICENSE.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

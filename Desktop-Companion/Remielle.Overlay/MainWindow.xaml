@@ -1,0 +1,23 @@
+<Window x:Class="Remielle.Overlay.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Remielle.Overlay"
+        xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
+        Title="Remielle"
+        Width="120"
+        Height="120"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        WindowStartupLocation="Manual"
+        UseLayoutRounding="True"
+        MouseLeftButtonDown="OnMouseLeftButtonDown"
+        MouseWheel="OnMouseWheel"
+        automation:AutomationProperties.Name="Remielle AI activity status">
+  <local:AnimatedGif x:Name="Animation"
+                     Stretch="Uniform"
+                     SnapsToDevicePixels="True" />
+</Window>

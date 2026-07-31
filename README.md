@@ -136,6 +136,68 @@ Nhấn **"Load unpacked"** → chọn **một trong hai thư mục** bên dướ
 
 ---
 
+## 🪟 Windows Desktop Companion
+
+`Desktop-Companion` là overlay WPF chạy cùng ứng dụng ChatGPT/Codex trên
+Windows. Overlay giữ nguyên 5 trạng thái `WAITING`, `USER_TYPING`,
+`AI_THINKING`, `AI_TYPING` và `AI_COMPLETE`, đồng thời dùng Windows UI
+Automation để suy luận hoạt động của ứng dụng desktop.
+
+### Yêu cầu và cách chạy
+
+- Windows 10 hoặc Windows 11.
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) trở lên.
+
+```powershell
+dotnet restore Desktop-Companion/Remielle.Desktop.sln
+dotnet build Desktop-Companion/Remielle.Desktop.sln
+dotnet test Desktop-Companion/Remielle.Desktop.sln
+dotnet run --project Desktop-Companion/Remielle.Overlay
+```
+
+Widget luôn nằm trên cùng, có thể kéo bằng chuột trái và thay đổi kích thước
+từ 60–220 pixel bằng con lăn. Vị trí, kích thước và tùy chọn logging được lưu
+tại `%LocalAppData%\Remielle Widget\settings.json`.
+
+Nhấp chuột phải vào widget để:
+
+- Bật/tắt diagnostic logging. Logging mặc định tắt; khi bật, log nằm tại
+  `%LocalAppData%\Remielle Widget\remielle.log`.
+- Đưa widget về vị trí mặc định.
+- Đóng ứng dụng.
+- Trong build Debug, chọn trực tiếp từng state trong **Debug state simulator**
+  hoặc chọn **Resume observer** để quay lại UI Automation. Menu này không tồn
+  tại trong build Release.
+
+### Windows UI Automation và quyền riêng tư
+
+Observer tìm process/cửa sổ ChatGPT hoặc Codex, sau đó dùng selector trong
+[`UiSelectors.json`](./Desktop-Companion/Remielle.ChatGPTObserver/UiSelectors.json)
+để nhận diện composer, Send, Stop và vùng assistant. Khi giao diện desktop thay
+đổi, dùng Inspect.exe hoặc Accessibility Insights để lấy metadata accessibility,
+cập nhật matcher `automationId`, `nameContains`, `controlType` hoặc `className`,
+sau đó build và khởi động lại.
+
+Ứng dụng chỉ kiểm tra focus, empty/non-empty và các thay đổi cấu trúc UI. Nội
+dung prompt hoặc phản hồi không được lưu, ghi log hay gửi đi; ứng dụng không có
+telemetry, không đọc cookie/token/clipboard, không hook bàn phím, không inject
+DLL và không đọc bộ nhớ process.
+
+> ⚠️ **Giới hạn đã biết:** trên Codex desktop `26.721.4979.0` được kiểm tra ngày
+> 31/07/2026, lần đọc UIA ban đầu chỉ thấy `Chrome_WidgetWin_1`, `RootWebArea`
+> và các nút khung cửa sổ. Runtime observer sau đó đã nhận diện được Send/Stop
+> và chuyển sang `AI_THINKING`, nhưng selector composer/assistant cùng đủ 5
+> trạng thái live vẫn chưa được xác minh. Observer sẽ reconnect và ghi
+> diagnostic an toàn; Debug state simulator vẫn kiểm tra đầy đủ overlay và 5
+> animation.
+
+Desktop Companion tái sử dụng nguyên trạng GIF từ các extension hiện có.
+Nguồn asset là [Gemielle](https://github.com/Rainan1010/Gemielle); thông tin
+giấy phép nằm trong
+[`THIRD-PARTY-NOTICES.md`](./Desktop-Companion/THIRD-PARTY-NOTICES.md).
+
+---
+
 ## ❓ Câu hỏi thường gặp
 
 <details>
