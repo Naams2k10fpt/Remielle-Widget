@@ -27,6 +27,7 @@ public sealed class ChatGptObserver : IWidgetObserver
     private AutomationElement? _composer;
     private AutomationElement? _assistant;
     private bool _connected;
+    private bool? _targetAvailable;
     private bool _busy;
     private bool _outputSeen;
     private bool _pauseEmitted;
@@ -34,6 +35,7 @@ public sealed class ChatGptObserver : IWidgetObserver
     private bool _sendLogged;
     private bool _stopLogged;
     private bool? _composerActive;
+    private bool _pendingDisconnect;
     private DateTimeOffset _lastOutputAt;
     private DateTimeOffset? _busyMissingSince;
     private bool _disposed;
@@ -109,9 +111,27 @@ public sealed class ChatGptObserver : IWidgetObserver
                     Connect();
                     if (_window is null)
                     {
+                        if (_targetAvailable.HasValue || _pendingDisconnect)
+                        {
+                            SetTargetAvailability(false);
+                            if (_pendingDisconnect)
+                            {
+                                _pendingDisconnect = false;
+                                _log("observer_disconnected");
+                                Emit(WidgetEventKind.ObserverDisconnected);
+                            }
+                        }
+
                         await Task.Delay(ReconnectInterval, cancellationToken).ConfigureAwait(false);
                         continue;
                     }
+                }
+
+                if (_pendingDisconnect)
+                {
+                    _pendingDisconnect = false;
+                    _log("observer_reconnected");
+                    Emit(WidgetEventKind.ObserverDisconnected);
                 }
 
                 Poll();
@@ -149,7 +169,6 @@ public sealed class ChatGptObserver : IWidgetObserver
         {
             var candidate = candidates[i];
             if (!processIds.Contains(candidate.Current.ProcessId)
-                || candidate.Current.IsOffscreen
                 || !MatchesAny(candidate, _selectors.Window, out _))
             {
                 continue;
@@ -164,7 +183,7 @@ public sealed class ChatGptObserver : IWidgetObserver
             }
         }
 
-        // ponytail: observe one visible ChatGPT/Codex window; add per-window observers if multi-window use matters.
+        // ponytail: observe one ChatGPT/Codex window; add per-window observers if multi-window use matters.
         _window = preferred ?? first;
         if (_window is null)
         {
@@ -174,8 +193,7 @@ public sealed class ChatGptObserver : IWidgetObserver
         _connected = true;
         Automation.AddAutomationFocusChangedEventHandler(_focusHandler);
         _log("chatgpt_window_detected");
-        TargetAvailabilityChanged?.Invoke(true);
-        Poll();
+        SetTargetAvailability(IsTargetVisible(_window));
     }
 
     private HashSet<int> GetTargetProcessIds()
@@ -202,6 +220,13 @@ public sealed class ChatGptObserver : IWidgetObserver
         }
 
         _ = _window.Current.ProcessId;
+        var targetVisible = IsTargetVisible(_window);
+        SetTargetAvailability(targetVisible);
+        if (!targetVisible)
+        {
+            return;
+        }
+
         var descendants = _window.FindAll(TreeScope.Descendants, Condition.TrueCondition);
 
         var composer = FindElement(descendants, _selectors.Composer, out var composerIndex);
@@ -236,7 +261,7 @@ public sealed class ChatGptObserver : IWidgetObserver
             ObserveComposer(composer);
         }
 
-        var busyNow = stop is not null || send is not null && !send.Current.IsEnabled;
+        var busyNow = stop is not null;
         ObserveBusyState(busyNow);
     }
 
@@ -460,7 +485,6 @@ public sealed class ChatGptObserver : IWidgetObserver
             return;
         }
 
-        var wasConnected = _connected;
         try
         {
             Automation.RemoveAutomationFocusChangedEventHandler(_focusHandler);
@@ -485,15 +509,9 @@ public sealed class ChatGptObserver : IWidgetObserver
         _sendLogged = false;
         _stopLogged = false;
 
-        if (wasConnected)
-        {
-            TargetAvailabilityChanged?.Invoke(false);
-        }
-
         if (emitEvent)
         {
-            _log("observer_disconnected");
-            Emit(WidgetEventKind.ObserverDisconnected);
+            _pendingDisconnect = true;
         }
     }
 
@@ -531,6 +549,31 @@ public sealed class ChatGptObserver : IWidgetObserver
 
     private void Emit(WidgetEventKind kind) =>
         EventObserved?.Invoke(new WidgetEvent(kind));
+
+    private void SetTargetAvailability(bool available)
+    {
+        if (_targetAvailable == available)
+        {
+            return;
+        }
+
+        _targetAvailable = available;
+        TargetAvailabilityChanged?.Invoke(available);
+    }
+
+    private static bool IsTargetVisible(AutomationElement window)
+    {
+        var visualState = WindowVisualState.Normal;
+        if (window.TryGetCurrentPattern(WindowPattern.Pattern, out var pattern))
+        {
+            visualState = ((WindowPattern)pattern).Current.WindowVisualState;
+        }
+
+        return ShouldShowTarget(window.Current.IsOffscreen, visualState);
+    }
+
+    internal static bool ShouldShowTarget(bool isOffscreen, WindowVisualState visualState) =>
+        !isOffscreen && visualState != WindowVisualState.Minimized;
 
     private static AutomationElement? FindElement(
         AutomationElementCollection elements,
@@ -588,6 +631,12 @@ public sealed class ChatGptObserver : IWidgetObserver
 
         if (!string.IsNullOrWhiteSpace(matcher.ClassName)
             && !string.Equals(current.ClassName, matcher.ClassName, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(matcher.ClassNameContains)
+            && !current.ClassName.Contains(matcher.ClassNameContains, StringComparison.OrdinalIgnoreCase))
         {
             return false;
         }

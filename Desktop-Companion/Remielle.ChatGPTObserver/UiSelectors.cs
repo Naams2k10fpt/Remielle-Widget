@@ -66,18 +66,36 @@ public sealed class UiSelectors
             Composer =
             [
                 new() { AutomationId = "prompt-textarea" },
+                new() { ClassNameContains = "ProseMirror", ControlType = "Edit" },
                 new() { NameContains = "Message", ControlType = "Edit" },
                 new() { NameContains = "Ask", ControlType = "Edit" },
                 new() { NameContains = "Message", ControlType = "Document" },
                 new() { NameContains = "Ask", ControlType = "Document" }
             ],
-            Send = [new() { NameContains = "Send", ControlType = "Button" }],
-            Stop = [new() { NameContains = "Stop", ControlType = "Button" }],
+            Send =
+            [
+                new()
+                {
+                    NameContains = "Send",
+                    ClassNameContains = "button-composer",
+                    ControlType = "Button"
+                }
+            ],
+            Stop =
+            [
+                new()
+                {
+                    NameContains = "Stop",
+                    ClassNameContains = "button-composer",
+                    ControlType = "Button"
+                }
+            ],
             Assistant =
             [
                 new() { AutomationId = "conversation-turn" },
                 new() { NameContains = "Assistant", ControlType = "Document" },
-                new() { NameContains = "Assistant", ControlType = "Group" }
+                new() { NameContains = "Assistant", ControlType = "Group" },
+                new() { AutomationId = "RootWebArea", ControlType = "Document" }
             ]
         };
 }
@@ -88,10 +106,12 @@ public sealed class UiMatcher
     public string? NameContains { get; init; }
     public string? ControlType { get; init; }
     public string? ClassName { get; init; }
+    public string? ClassNameContains { get; init; }
 
     internal bool IsEmpty =>
         string.IsNullOrWhiteSpace(AutomationId)
         && string.IsNullOrWhiteSpace(NameContains)
         && string.IsNullOrWhiteSpace(ControlType)
-        && string.IsNullOrWhiteSpace(ClassName);
+        && string.IsNullOrWhiteSpace(ClassName)
+        && string.IsNullOrWhiteSpace(ClassNameContains);
 }

@@ -66,7 +66,7 @@ public partial class App : Application
                     window.Show();
                 }
             }
-            else if (_backgroundMode)
+            else
             {
                 window.Hide();
             }

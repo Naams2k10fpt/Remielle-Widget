@@ -21,6 +21,10 @@
       "automationId": "prompt-textarea"
     },
     {
+      "classNameContains": "ProseMirror",
+      "controlType": "Edit"
+    },
+    {
       "nameContains": "Message",
       "controlType": "Edit"
     },
@@ -40,12 +44,14 @@
   "send": [
     {
       "nameContains": "Send",
+      "classNameContains": "button-composer",
       "controlType": "Button"
     }
   ],
   "stop": [
     {
       "nameContains": "Stop",
+      "classNameContains": "button-composer",
       "controlType": "Button"
     }
   ],
@@ -60,6 +66,10 @@
     {
       "nameContains": "Assistant",
       "controlType": "Group"
+    },
+    {
+      "automationId": "RootWebArea",
+      "controlType": "Document"
     }
   ]
 }

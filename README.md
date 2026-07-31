@@ -161,7 +161,8 @@ từ 60–220 pixel bằng con lăn. Vị trí, kích thước, auto-open và t�
 
 Lần chạy thủ công đầu tiên đăng ký widget khởi động cùng Windows. Ở các lần
 đăng nhập sau, widget chạy ẩn và tự hiện khi cửa sổ ChatGPT hoặc Codex được
-phát hiện; khi đóng ứng dụng AI, widget trở lại chạy ẩn để chờ lần mở tiếp theo.
+phát hiện. Widget ẩn theo khi cửa sổ AI được thu nhỏ hoặc đóng, rồi hiện lại
+khi cửa sổ được khôi phục.
 
 Nhấp chuột phải vào widget để:
 
@@ -181,8 +182,8 @@ Observer tìm process/cửa sổ ChatGPT hoặc Codex, sau đó dùng selector t
 [`UiSelectors.json`](./Desktop-Companion/Remielle.ChatGPTObserver/UiSelectors.json)
 để nhận diện composer, Send, Stop và vùng assistant. Khi giao diện desktop thay
 đổi, dùng Inspect.exe hoặc Accessibility Insights để lấy metadata accessibility,
-cập nhật matcher `automationId`, `nameContains`, `controlType` hoặc `className`,
-sau đó build và khởi động lại.
+cập nhật matcher `automationId`, `nameContains`, `controlType`, `className` hoặc
+`classNameContains`, sau đó build và khởi động lại.
 
 Ứng dụng chỉ kiểm tra focus, empty/non-empty và các thay đổi cấu trúc UI. Nội
 dung prompt hoặc phản hồi không được lưu, ghi log hay gửi đi; ứng dụng không có
